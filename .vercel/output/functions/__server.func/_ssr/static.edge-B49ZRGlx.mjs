@@ -1,0 +1,1 @@
+import{o as e}from"./react-DiO9qdTV.mjs";import{i as t}from"./react-dom-server.edge.production-_KPYsOkV.mjs";var n=e((e=>{var n=t();e.version=n.version,e.prerender=n.prerender,e.resumeAndPrerender=n.resumeAndPrerender}))();export{n as default};
