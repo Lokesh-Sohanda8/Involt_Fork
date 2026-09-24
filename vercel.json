@@ -1,4 +1,4 @@
 {
   "framework": null,
-  "buildCommand": "pnpm run build"
+  "buildCommand": "pnpm run build && node scripts/patch-vercel-ssr.mjs"
 }
