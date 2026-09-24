@@ -1,0 +1,6 @@
+eon.webp OCR: ['IN', 'OLT', 'INVOLT']
+plusex.webp OCR: ['INVOLT']
+activex.webp OCR: ['INVOLT', 'INVOLT']
+urbanx.webp OCR: ['INVOLT', 'PluseX']
+vibe.webp OCR: ['四', 'INVOLT', 'INVOLT']
+zeno.webp OCR: ['INVOLT']

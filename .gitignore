@@ -1,0 +1,11 @@
+3d-web/
+node_modules/
+dist/
+.next/
+.DS_Store
+.sites-runtime/
+node_modules/
+.next/
+dist/
+.env
+.env.*
