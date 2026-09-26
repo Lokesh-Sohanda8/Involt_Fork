@@ -6,12 +6,12 @@ All changes are **functional only** — no visual design changes were made. The 
 
 ## ✅ What Was Done
 
-### 1. Distributor Enquiry System — FormSubmit AJAX + WhatsApp Fast-Track
-The API gateway at [`route.ts`](file:///c:/Users/Lokesh/Downloads/Involt_EV_3D_Website/app/api/distributor-enquiry/route.ts) connects directly to FormSubmit AJAX:
+### 1. Distributor Enquiry System — Direct Client-Side FormSubmit AJAX & WhatsApp Fast-Track
+The application now submits enquiries directly from the client browser to FormSubmit, eliminating Vercel server 403 blocks.
 
-- **Server-side only** — The FormSubmit request is executed server-side via `fetch('https://formsubmit.co/ajax/{ENQUIRY_RECIPIENT_EMAIL}')`.
-- **Recipient**: configured via `ENQUIRY_RECIPIENT_EMAIL=involtintegrated@gmail.com` in environment variables.
-- **Unique Reference ID**: Generated server-side with format `INV-XXXXXX` (6 uppercase alphanumeric characters). Returned in API response and sent with FormSubmit payload.
+- **Architecture**: `INVolt Form` → `Browser fetch()` → `https://formsubmit.co/ajax/{RECIPIENT}`
+- **Recipient Configuration**: The Next.js API route (`/api/distributor-enquiry`) now acts only as a secure configuration endpoint, returning the `ENQUIRY_RECIPIENT_EMAIL` so the client can construct the FormSubmit URL without exposing the email in static source code.
+- **Unique Reference ID**: Generated client-side with format `INV-XXXXXX` (6 uppercase alphanumeric characters).
 - **Structured Email Payload**:
   - `_subject`: `New INVolt Distributor Enquiry — {REFERENCE_ID}`
   - `_template`: `table`
@@ -25,8 +25,8 @@ The API gateway at [`route.ts`](file:///c:/Users/Lokesh/Downloads/Involt_EV_3D_W
   - `Submission Time`: Indian Standard Time formatted timestamp
   - `Product / Context`: submitted context / model
   - `Requirements`: submitted requirements
-- **Error Handling**: FormSubmit failures handled cleanly; no internal stack traces or technical errors exposed to customer.
-- **Rate Limiting & Duplicate Protection**: 30-second server cooldown per email and 5-second client duplicate submission prevention.
+- **Error Handling**: FormSubmit failures are handled directly in the browser console.
+- **Duplicate Protection**: 5-second client duplicate submission prevention.
 
 ### 2. WhatsApp Fast-Track Follow-up
 Upon successful form submission:

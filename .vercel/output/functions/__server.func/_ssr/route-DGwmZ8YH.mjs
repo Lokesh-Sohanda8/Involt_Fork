@@ -1,0 +1,1 @@
+import{b as e}from"./server-KgKd9cGa.mjs";async function t(){let t=(process.env.ENQUIRY_RECIPIENT_EMAIL||`involtintegrated@gmail.com`).trim();return e.json({recipientEmail:t})}export{t as GET};
