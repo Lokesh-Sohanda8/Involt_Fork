@@ -138,7 +138,15 @@ export async function POST(request: Request) {
       body: JSON.stringify(formSubmitPayload),
     });
 
-    const result = await response.json().catch(() => null);
+    const contentType = response.headers.get('content-type');
+    const rawBodyText = await response.text();
+    
+    let result = null;
+    try {
+      result = JSON.parse(rawBodyText);
+    } catch {
+      // Ignored if not JSON
+    }
 
     const isSuccess = response.ok && result && (result.success === 'true' || result.success === true);
     const isActivationPending = result && typeof result.message === 'string' && result.message.toLowerCase().includes('activation');
@@ -146,7 +154,10 @@ export async function POST(request: Request) {
     if (!isSuccess && !isActivationPending) {
       console.error('[distributor-enquiry] FormSubmit rejected submission:', {
         status: response.status,
-        message: result?.message,
+        contentType: contentType || 'unknown',
+        url: `https://formsubmit.co/ajax/***REDACTED***`,
+        rawBody: rawBodyText,
+        parsedMessage: result?.message,
       });
 
       return NextResponse.json(
