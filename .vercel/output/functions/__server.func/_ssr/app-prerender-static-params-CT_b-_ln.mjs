@@ -1,1 +1,0 @@
-import{h as e,v as t}from"./root-params-CuuAMoNU.mjs";async function n(n){return t(e(n.params,n.rootParamNamesByPattern[n.pattern]),()=>n.fn({params:n.params}))}export{n};

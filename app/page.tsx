@@ -1,10 +1,12 @@
 import Link from 'next/link';
-import { ArrowUpRight, ArrowRight, MoveUpRight, CircleGauge, Zap, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { ArrowUpRight, ArrowRight, MoveUpRight, CircleGauge, Zap, ShieldCheck, CheckCircle2, Mail, Phone } from 'lucide-react';
 import { models } from '@/lib/models';
 import Teaser360 from '@/components/teaser-360';
+import DistributorPopup from '@/components/distributor-popup';
 
 export default function Home() {
   return <>
+    <DistributorPopup />
     <section className="hero">
       <div className="hero-bg-video-wrap" aria-hidden="true">
         <video
@@ -24,9 +26,11 @@ export default function Home() {
       <div className="hero-grid" aria-hidden="true" />
       <div className="hero-content">
         <div className="hero-copy">
-          <p className="eyebrow"><span className="small-line" /> THE NEXT MOVE IS ELECTRIC</p>
-          <h1>CHARGE<br />YOUR <em>LIFE.</em></h1>
-          <p className="hero-description">Meet Involt&apos;s electric mobility lineup,<br className="desktop-break"/>designed for everyday movement.</p>
+          <div className="hero-text-wrapper">
+            <p className="eyebrow"><span className="small-line" /> THE NEXT MOVE IS ELECTRIC</p>
+            <h1>CHARGE<br />YOUR <em>LIFE.</em></h1>
+            <p className="hero-description">Meet Involt&apos;s electric mobility lineup,<br className="desktop-break"/>designed for everyday movement.</p>
+          </div>
           <div className="button-row">
             <Link href="/models" className="button primary">Explore the lineup <ArrowUpRight size={19}/></Link>
             <Link href="/experience" className="button outline">Enter the 3D studio <ArrowUpRight size={19}/></Link>
@@ -43,10 +47,20 @@ export default function Home() {
     </section>
 
     <div className="ticker">
-      <span>THOUGHTFUL DESIGN</span><Zap size={18}/>
-      <span>SMART TECHNOLOGY</span><Zap size={18}/>
-      <span>EVERYDAY PERFORMANCE</span><Zap size={18}/>
-      <span>CHARGE YOUR LIFE</span><Zap size={18}/>
+      <div className="ticker-track">
+        {[1, 2].map(group => (
+          <div className="ticker-content" key={group} aria-hidden={group === 2 ? "true" : undefined}>
+            <span>THOUGHTFUL DESIGN</span><Zap size={18}/>
+            <span>SMART TECHNOLOGY</span><Zap size={18}/>
+            <span>EVERYDAY PERFORMANCE</span><Zap size={18}/>
+            <span>CHARGE YOUR LIFE</span><Zap size={18}/>
+            <span>THOUGHTFUL DESIGN</span><Zap size={18}/>
+            <span>SMART TECHNOLOGY</span><Zap size={18}/>
+            <span>EVERYDAY PERFORMANCE</span><Zap size={18}/>
+            <span>CHARGE YOUR LIFE</span><Zap size={18}/>
+          </div>
+        ))}
+      </div>
     </div>
 
     <section className="section lineup" id="lineup">
@@ -132,6 +146,16 @@ export default function Home() {
             <p>Warranty, service network, spare availability and finance options listed across the range.</p>
           </div>
         </article>
+      </div>
+    </section>
+    <section className="section contact-bottom" style={{ borderTop: '1px solid #32372c', paddingTop: '60px', paddingBottom: '60px' }}>
+      <div>
+        <p className="eyebrow"><Mail size={14} />GET IN TOUCH</p>
+        <a href="mailto:involtintegrated@gmail.com" className="contact-email">involtintegrated@gmail.com ↗</a>
+      </div>
+      <div>
+        <p className="eyebrow"><Phone size={14} />CALL US</p>
+        <a href="tel:+918669668665" className="contact-email">8669668665 ↗</a>
       </div>
     </section>
   </>;

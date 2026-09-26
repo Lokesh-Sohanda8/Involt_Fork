@@ -64,7 +64,7 @@
     "deep-is": "0.1.4",
     "detect-libc": "2.1.2",
     "electron-to-chromium": "1.5.358",
-    "enhanced-resolve": "5.21.3",
+    "enhanced-resolve": "5.25.1",
     "es-module-lexer": "2.1.0",
     "esbuild": "0.28.0",
     "escape-string-regexp": "4.0.0",
