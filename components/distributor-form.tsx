@@ -1,10 +1,14 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight, CheckCircle2, MessageCircle } from 'lucide-react';
 
 interface DistributorFormProps {
-  onSuccess?: () => void;
+  onSuccess?: (referenceId: string) => void;
+  onClose?: () => void;
+  source?: string;
+  productContext?: string;
+  requirements?: string;
 }
 
 function isValidPhone(phone: string): boolean {
@@ -12,12 +16,20 @@ function isValidPhone(phone: string): boolean {
   return /^(\+91|91|0)?[6-9]\d{9}$/.test(cleaned);
 }
 
-export default function DistributorForm({ onSuccess }: DistributorFormProps) {
+export default function DistributorForm({
+  onSuccess,
+  onClose,
+  source = 'INVolt Website',
+  productContext = 'Distributor Network',
+  requirements = 'Distributor enquiry',
+}: DistributorFormProps) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
+  const [referenceId, setReferenceId] = useState('');
+  const [submittedData, setSubmittedData] = useState<{ name: string; email: string; phone: string } | null>(null);
   const lastSubmitRef = useRef(0);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -67,31 +79,92 @@ export default function DistributorForm({ onSuccess }: DistributorFormProps) {
           name: trimmedName,
           email: trimmedEmail,
           phone: trimmedPhone,
+          source,
+          product: productContext,
+          requirements,
         }),
       });
 
       const data = await response.json();
 
-      if (response.ok && data.success) {
+      if (response.ok && data.success && data.referenceId) {
+        setReferenceId(data.referenceId);
+        setSubmittedData({
+          name: trimmedName,
+          email: trimmedEmail,
+          phone: trimmedPhone,
+        });
         setStatus('success');
         if (onSuccess) {
-          // Give the user a moment to see the success message
-          setTimeout(onSuccess, 3000);
+          onSuccess(data.referenceId);
         }
       } else {
         setStatus('error');
         setErrorMessage(data.message || 'Unable to send your enquiry. Please try again.');
       }
-    } catch (err) {
+    } catch {
       setStatus('error');
       setErrorMessage('A network error occurred. Please try again.');
     }
   };
 
   if (status === 'success') {
+    const rawNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '918669668665';
+    const whatsappNumber = rawNumber.replace(/[^0-9]/g, '');
+
+    const whatsappMessage = [
+      'Hello INVolt,',
+      '',
+      'I just submitted an enquiry through the INVolt website.',
+      '',
+      `Reference ID: ${referenceId}`,
+      '',
+      `Name: ${submittedData?.name || name.trim()}`,
+      `Email: ${submittedData?.email || email.trim()}`,
+      `Phone: ${submittedData?.phone || phone.trim()}`,
+      '',
+      `Product/Context: ${productContext}`,
+      `Requirements: ${requirements}`,
+      '',
+      'I would like to follow up regarding my enquiry.',
+    ].join('\n');
+
+    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`;
+
     return (
-      <div className="distributor-form-success">
-        <p>Thank you. Our team will get in touch with you shortly.</p>
+      <div className="distributor-form-success" role="status" aria-live="polite">
+        <div className="distributor-success-icon-wrap">
+          <CheckCircle2 size={36} color="#16a34a" />
+        </div>
+        <h3 className="distributor-success-title">Enquiry Submitted Successfully</h3>
+        <p className="distributor-success-text">Your enquiry has been received.</p>
+        
+        <div className="distributor-reference-card">
+          <span className="distributor-reference-label">Reference ID</span>
+          <div className="distributor-reference-value">{referenceId}</div>
+        </div>
+
+        <div className="distributor-success-actions">
+          <a
+            href={whatsappUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="button distributor-whatsapp-btn"
+          >
+            <MessageCircle size={18} />
+            <span>Follow up on WhatsApp</span>
+          </a>
+
+          {onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              className="button outline distributor-close-btn"
+            >
+              Close
+            </button>
+          )}
+        </div>
       </div>
     );
   }

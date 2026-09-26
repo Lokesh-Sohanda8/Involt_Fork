@@ -1,1 +1,0 @@
-import"./navigation-BJp8FOqF.mjs";function e(e,t){return null}function t(e,t){return null}export{e as resolveHybridClientRewriteHref,t as resolveHybridClientRouteOwner};

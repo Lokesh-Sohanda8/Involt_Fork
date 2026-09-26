@@ -1,75 +1,69 @@
 # INVolt Website — Functional Fixes Summary
 
-All changes are **functional only** — no design changes were made.
+All changes are **functional only** — no visual design changes were made. The INVolt visual design remains locked.
 
 ---
 
 ## ✅ What Was Done
 
-### 1. Distributor Email System — Resend Only
-The API route at [`route.ts`](file:///c:/Users/Lokesh/Downloads/Involt_EV_3D_Website/app/api/distributor-enquiry/route.ts) has been implemented using the official Resend SDK:
+### 1. Distributor Enquiry System — FormSubmit AJAX + WhatsApp Fast-Track
+The API gateway at [`route.ts`](file:///c:/Users/Lokesh/Downloads/Involt_EV_3D_Website/app/api/distributor-enquiry/route.ts) connects directly to FormSubmit AJAX:
 
-- **Server-side only** — Resend API key is read from `process.env.RESEND_API_KEY` (never exposed to client)
-- **Exact email format** per spec:
+- **Server-side only** — The FormSubmit request is executed server-side via `fetch('https://formsubmit.co/ajax/{ENQUIRY_RECIPIENT_EMAIL}')`.
+- **Recipient**: configured via `ENQUIRY_RECIPIENT_EMAIL=involtintegrated@gmail.com` in environment variables.
+- **Unique Reference ID**: Generated server-side with format `INV-XXXXXX` (6 uppercase alphanumeric characters). Returned in API response and sent with FormSubmit payload.
+- **Structured Email Payload**:
+  - `_subject`: `New INVolt Distributor Enquiry — {REFERENCE_ID}`
+  - `_template`: `table`
+  - `_captcha`: `false`
+  - `_replyto`: customer's submitted email
+  - `Reference ID`: `INV-XXXXXX`
+  - `Name`: submitted name
+  - `Email`: submitted email
+  - `Phone`: submitted phone
+  - `Source`: `INVolt Website`
+  - `Submission Time`: Indian Standard Time formatted timestamp
+  - `Product / Context`: submitted context / model
+  - `Requirements`: submitted requirements
+- **Error Handling**: FormSubmit failures handled cleanly; no internal stack traces or technical errors exposed to customer.
+- **Rate Limiting & Duplicate Protection**: 30-second server cooldown per email and 5-second client duplicate submission prevention.
+
+### 2. WhatsApp Fast-Track Follow-up
+Upon successful form submission:
+- The UI transitions to a dedicated success card displaying:
+  - **Enquiry Submitted Successfully**
+  - **Your enquiry has been received.**
+  - **Reference ID: INV-XXXXXX**
+  - **Follow up on WhatsApp** button.
+- The WhatsApp button dynamically generates a pre-filled, URL-encoded message:
+  ```text
+  Hello INVolt,
+
+  I just submitted an enquiry through the INVolt website.
+
+  Reference ID: INV-XXXXXX
+
+  Name: <Name>
+  Email: <Email>
+  Phone: <Phone>
+
+  Product/Context: <Product>
+  Requirements: <Requirements>
+
+  I would like to follow up regarding my enquiry.
   ```
-  New Distributor Enquiry
+- Uses business WhatsApp number configured via `NEXT_PUBLIC_WHATSAPP_NUMBER` (`918669668665`).
 
-  Name: <name>
-  Email: <email>
-  Phone: <phone>
-
-  Source: INVolt Website
-  ```
-- **Reply-To** set to customer's submitted email
-- **Recipient** set to `involtintegrated@gmail.com`
-- **Sender (From)**: authenticated Resend sender (`onboarding@resend.dev` or custom `RESEND_FROM`)
-- **Subject**: "New INVolt Distributor Enquiry"
-- **Error handling**: Technical errors logged server-side; customer sees only "Unable to send your enquiry right now. Please try again."
-- **No credentials** ever exposed to the frontend
-
-### 2. Validation — Strengthened
-
-**Server-side** ([`route.ts`](file:///c:/Users/Lokesh/Downloads/Involt_EV_3D_Website/app/api/distributor-enquiry/route.ts)):
-- Name: required, trimmed, 2–100 characters
-- Email: required, valid format
-- Phone: required, accepts Indian formats (+91, 91, 0 prefix + 10 digits starting 6-9)
-- Rate limiting: 30-second cooldown per email address
-
-**Client-side** ([`distributor-form.tsx`](file:///c:/Users/Lokesh/Downloads/Involt_EV_3D_Website/components/distributor-form.tsx)):
-- Same validation rules mirrored on client
-- 5-second duplicate submission prevention
-- `noValidate` + custom validation UX
-- Placeholder text and autocomplete attributes added
-
-### 3. Credential Storage — Correct
-- No `.env` committed (already in `.gitignore`)
-- No `NEXT_PUBLIC_` or `VITE_` prefixes
-- No frontend environment variables containing email secrets
-- Server reads: `RESEND_API_KEY`
-
-### 4–8. Already Working (Verified)
-- ✅ **Popup** appears immediately, once per session, dismissable
-- ✅ **Contact page** uses same `DistributorForm` and same API endpoint
-- ✅ **Green marquee** animated with CSS keyframes, respects `prefers-reduced-motion`
-- ✅ **Mobile hero order**: text → video → buttons (CSS `order` properties)
-- ✅ **Contact details** at bottom of home page with clickable `mailto:` and `tel:` links
+### 3. Home Popup & Contact Page Integration
+- ✅ **Home Popup** ([`distributor-popup.tsx`](file:///c:/Users/Lokesh/Downloads/Involt_EV_3D_Website/components/distributor-popup.tsx)): Triggered after 20 seconds or 40% page scroll, once per browser session. On successful submission, displays Reference ID, WhatsApp follow-up button, and Close button.
+- ✅ **Contact Page** ([`page.tsx`](file:///c:/Users/Lokesh/Downloads/Involt_EV_3D_Website/app/contact/page.tsx)): Uses the same `DistributorForm` component and same API endpoint.
 
 ---
 
-## ⚠️ Required: Vercel Environment Variables
+## ⚙️ Environment Variables
 
-> [!IMPORTANT]
-> For emails to work in production, add `RESEND_API_KEY` in your Vercel dashboard:
+| Variable | Description | Default / Example |
+|----------|-------------|-------------------|
+| `ENQUIRY_RECIPIENT_EMAIL` | Recipient email address for FormSubmit leads (server-only) | `involtintegrated@gmail.com` |
+| `NEXT_PUBLIC_WHATSAPP_NUMBER` | Business WhatsApp number (public client-safe) | `918669668665` |
 
-| Variable | Value |
-|----------|-------|
-| `RESEND_API_KEY` | Your Resend API key (`re_...`) |
-| `RESEND_FROM` *(optional)* | Custom sender if domain is verified (defaults to `onboarding@resend.dev`) |
-
-### How to add to Vercel:
-1. Go to your Vercel project dashboard
-2. **Settings → Environment Variables**
-3. Add `RESEND_API_KEY`
-4. Select **Production** (and optionally Preview/Development)
-5. Click Save
-6. **Redeploy** the project

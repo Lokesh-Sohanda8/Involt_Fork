@@ -43,7 +43,18 @@
 .form-group input:disabled { opacity: 0.7; background: #e0e2db; cursor: not-allowed; }
 .form-group input::placeholder { color: #a0a599; font-weight: 400; }
 .distributor-form-error { background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 4px; font-size: 14px; }
-.distributor-form-success { text-align: center; padding: 40px 20px; color: #2d3427; font-size: 18px; font-weight: 500; border: 1px dashed #bac2ae; border-radius: 8px; }
+.distributor-form-success { text-align: center; padding: 28px 20px; color: #11170d; background: #ffffff; border: 1px solid #d0d3cb; border-radius: 10px; display: flex; flex-direction: column; align-items: center; gap: 14px; box-shadow: 0 4px 16px rgba(0,0,0,0.04); }
+.distributor-success-icon-wrap { width: 56px; height: 56px; border-radius: 50%; background: #ecfdf5; display: flex; align-items: center; justify-content: center; }
+.distributor-success-title { font-size: 22px; font-weight: 700; color: #11170d; margin: 0; line-height: 1.25; letter-spacing: -0.02em; }
+.distributor-success-text { font-size: 14px; color: #5a6250; margin: 0; }
+.distributor-reference-card { background: #f5f6f2; border: 1px dashed #bac2ae; border-radius: 6px; padding: 12px 20px; width: 100%; box-sizing: border-box; }
+.distributor-reference-label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: #697061; font-weight: 600; margin-bottom: 4px; }
+.distributor-reference-value { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 22px; font-weight: 800; color: #11170d; letter-spacing: 0.08em; }
+.distributor-success-actions { display: flex; flex-direction: column; gap: 10px; width: 100%; margin-top: 6px; }
+.distributor-whatsapp-btn { background: #25D366 !important; color: #ffffff !important; border: 1px solid #20bd5a !important; font-weight: 600; text-decoration: none; width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 48px; border-radius: 4px; transition: background 0.2s, transform 0.2s; box-sizing: border-box; }
+.distributor-whatsapp-btn:hover { background: #20bd5a !important; transform: translateY(-1px); color: #ffffff !important; }
+.distributor-close-btn { width: 100%; min-height: 44px; color: #4a5042 !important; border-color: #bac2ae !important; background: transparent !important; }
+.distributor-close-btn:hover { background: #f0f1ed !important; color: #11170d !important; }
 @media(max-width: 760px) { .distributor-popup-content { padding: 30px 20px; } .distributor-popup-header h2 { font-size: 26px; } }
 
 /* Responsive hardening and touch-safe interactive targets. */

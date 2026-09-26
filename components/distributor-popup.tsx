@@ -6,6 +6,7 @@ import DistributorForm from './distributor-form';
 
 export default function DistributorPopup() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
 
   useEffect(() => {
     try {
@@ -53,7 +54,7 @@ export default function DistributorPopup() {
   };
 
   const handleSuccess = () => {
-    setIsOpen(false);
+    setIsSuccess(true);
   };
 
   if (!isOpen) return null;
@@ -71,11 +72,19 @@ export default function DistributorPopup() {
         <button className="distributor-popup-close" onClick={handleClose} aria-label="Close popup">
           <X size={24} />
         </button>
-        <div className="distributor-popup-header">
-          <h2>Want to become an INVolt distributor?</h2>
-          <p>Bring the next generation of electric mobility to your city.</p>
-        </div>
-        <DistributorForm onSuccess={handleSuccess} />
+        {!isSuccess && (
+          <div className="distributor-popup-header">
+            <h2>Want to become an INVolt distributor?</h2>
+            <p>Bring the next generation of electric mobility to your city.</p>
+          </div>
+        )}
+        <DistributorForm 
+          onSuccess={handleSuccess} 
+          onClose={handleClose}
+          source="INVolt Website — Home Popup"
+          productContext="Distributor Network"
+          requirements="Distributor enquiry"
+        />
       </div>
     </div>
   );

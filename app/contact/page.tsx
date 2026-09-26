@@ -42,7 +42,11 @@ export default function Contact(){
       <h2>Want to become an INVolt distributor?</h2>
       <p style={{ color: '#697061', marginBottom: '24px' }}>Bring the next generation of electric mobility to your city. Fill out the form below and our team will get in touch with you.</p>
       <div style={{ maxWidth: '400px' }}>
-        <DistributorForm />
+        <DistributorForm 
+          source="INVolt Website — Contact Page"
+          productContext="Distributor Network"
+          requirements="Distributor enquiry"
+        />
       </div>
     </section>
 

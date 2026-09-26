@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { Resend } from 'resend';
 
 // Simple in-memory rate limiter (per server instance)
 const recentSubmissions = new Map<string, number>();
@@ -26,6 +25,15 @@ function isValidEmail(email: string): boolean {
 function isValidPhone(phone: string): boolean {
   const cleaned = phone.replace(/[\s\-().]/g, '');
   return /^(\+91|91|0)?[6-9]\d{9}$/.test(cleaned);
+}
+
+function generateReferenceId(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let suffix = '';
+  for (let i = 0; i < 6; i++) {
+    suffix += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return `INV-${suffix}`;
 }
 
 export async function POST(request: Request) {
@@ -82,93 +90,81 @@ export async function POST(request: Request) {
       );
     }
 
-    // --- Check Resend API Key ---
-    const apiKey = process.env.RESEND_API_KEY?.trim();
-    if (!apiKey) {
-      console.error('[distributor-enquiry] RESEND_API_KEY is not configured on the server.');
-      return NextResponse.json(
-        { success: false, message: 'Email service is currently unavailable. Please try again later.' },
-        { status: 500 }
-      );
-    }
+    // --- Generate Reference ID ---
+    const referenceId = generateReferenceId();
 
-    // --- Initialize Resend client ---
-    const resend = new Resend(apiKey);
+    // --- Format Submission Timestamp ---
+    const timestamp = new Date().toLocaleString('en-IN', {
+      timeZone: 'Asia/Kolkata',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    }) + ' IST';
 
-    const fromAddress = process.env.RESEND_FROM?.trim() || 'onboarding@resend.dev';
-    const recipient = (process.env.DISTRIBUTOR_RECIPIENT_EMAIL || 'involtintegrated@gmail.com').trim();
-    const subject = 'New INVolt Distributor Enquiry';
+    // --- Recipient Email ---
+    const recipientEmail = (process.env.ENQUIRY_RECIPIENT_EMAIL || 'involtintegrated@gmail.com').trim();
 
-    const textBody = [
-      'New Distributor Enquiry',
-      '',
-      `Name: ${trimmedName}`,
-      `Email: ${trimmedEmail}`,
-      `Phone: ${trimmedPhone}`,
-      '',
-      'Source: INVolt Website',
-    ].join('\n');
+    const origin = request.headers.get('origin') || 'https://involt.knowletive.in';
+    const referer = request.headers.get('referer') || `${origin}/`;
 
-    const htmlBody = `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>New INVolt Distributor Enquiry</title>
-</head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #1a1a1a; max-width: 600px; margin: 0 auto; padding: 24px; background-color: #ffffff;">
-  <div style="border-bottom: 2px solid #ea580c; padding-bottom: 12px; margin-bottom: 20px;">
-    <h2 style="margin: 0; color: #111111; font-size: 20px; font-weight: 700;">New Distributor Enquiry</h2>
-    <p style="margin: 4px 0 0 0; color: #666666; font-size: 13px;">Received via INVolt EV Website</p>
-  </div>
-  <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">
-    <tr>
-      <td style="padding: 10px 0; font-weight: 600; width: 100px; color: #444444; border-bottom: 1px solid #f0f0f0;">Name:</td>
-      <td style="padding: 10px 0; color: #111111; border-bottom: 1px solid #f0f0f0;">${trimmedName}</td>
-    </tr>
-    <tr>
-      <td style="padding: 10px 0; font-weight: 600; color: #444444; border-bottom: 1px solid #f0f0f0;">Email:</td>
-      <td style="padding: 10px 0; border-bottom: 1px solid #f0f0f0;"><a href="mailto:${trimmedEmail}" style="color: #ea580c; text-decoration: none;">${trimmedEmail}</a></td>
-    </tr>
-    <tr>
-      <td style="padding: 10px 0; font-weight: 600; color: #444444; border-bottom: 1px solid #f0f0f0;">Phone:</td>
-      <td style="padding: 10px 0; border-bottom: 1px solid #f0f0f0;"><a href="tel:${trimmedPhone}" style="color: #ea580c; text-decoration: none;">${trimmedPhone}</a></td>
-    </tr>
-  </table>
-  <div style="border-top: 1px solid #eeeeee; padding-top: 16px; font-size: 12px; color: #888888;">
-    <p style="margin: 0;">Source: INVolt Website</p>
-    <p style="margin: 4px 0 0 0;">Reply directly to this email to respond to the applicant.</p>
-  </div>
-</body>
-</html>`;
+    const formSubmitPayload = {
+      _subject: `New INVolt Distributor Enquiry — ${referenceId}`,
+      _template: 'table',
+      _captcha: 'false',
+      _replyto: trimmedEmail,
+      'Reference ID': referenceId,
+      'Name': trimmedName,
+      'Email': trimmedEmail,
+      'Phone': trimmedPhone,
+      'Source': (typeof body.source === 'string' && body.source.trim()) ? body.source.trim() : 'INVolt Website',
+      'Submission Time': timestamp,
+      'Product / Context': (typeof body.product === 'string' && body.product.trim()) ? body.product.trim() : 'General / Multi-Model',
+      'Requirements': (typeof body.requirements === 'string' && body.requirements.trim()) ? body.requirements.trim() : 'Distributor enquiry',
+    };
 
-    console.log('[distributor-enquiry] Sending distributor enquiry email via Resend...');
+    console.log(`[distributor-enquiry] Submitting enquiry ${referenceId} via FormSubmit AJAX...`);
 
-    const { data, error } = await resend.emails.send({
-      from: fromAddress,
-      to: [recipient],
-      replyTo: trimmedEmail,
-      subject,
-      text: textBody,
-      html: htmlBody,
+    const response = await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(recipientEmail)}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Origin': origin,
+        'Referer': referer,
+      },
+      body: JSON.stringify(formSubmitPayload),
     });
 
-    if (error || !data?.id) {
-      console.error('[distributor-enquiry] Resend API rejected email send:', {
-        name: error?.name,
-        message: error?.message,
+    const result = await response.json().catch(() => null);
+
+    const isSuccess = response.ok && result && (result.success === 'true' || result.success === true);
+    const isActivationPending = result && typeof result.message === 'string' && result.message.toLowerCase().includes('activation');
+
+    if (!isSuccess && !isActivationPending) {
+      console.error('[distributor-enquiry] FormSubmit rejected submission:', {
+        status: response.status,
+        message: result?.message,
       });
 
       return NextResponse.json(
-        { success: false, message: 'Unable to send your enquiry right now. Please try again.' },
+        { success: false, message: 'Unable to submit your enquiry right now. Please try again.' },
         { status: 500 }
       );
     }
 
-    console.log(`[distributor-enquiry] Email sent successfully via Resend. Message ID: ${data.id}`);
+    if (isActivationPending) {
+      console.log(`[distributor-enquiry] FormSubmit activation email sent to ${recipientEmail}. Complete first-time activation to receive future leads directly.`);
+    } else {
+      console.log(`[distributor-enquiry] FormSubmit successfully processed enquiry ${referenceId}`);
+    }
 
     return NextResponse.json({
       success: true,
-      message: 'Your distributor enquiry has been sent successfully.',
+      referenceId,
+      message: 'Your distributor enquiry has been submitted successfully.',
     });
   } catch (error: any) {
     console.error('[distributor-enquiry] Unexpected server error:', {
@@ -176,7 +172,7 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json(
-      { success: false, message: 'Unable to send your enquiry right now. Please try again.' },
+      { success: false, message: 'Unable to submit your enquiry right now. Please try again.' },
       { status: 500 }
     );
   }
